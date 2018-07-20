@@ -8,7 +8,7 @@ connection=require("./db_connection").connection_obj,
 app=express(),
 cryptr = new Cryptr(process.env.SECRET);
 module.exports.register=function(req,res){
-	var today=new Date;
+	//var today=new Date;
 	var encrptedPass=cryptr.encrypt(req.body.password);
 	console.log(req.body.phone);
 	var user={
@@ -16,8 +16,8 @@ module.exports.register=function(req,res){
 		password:encrptedPass,
 		email:req.body.email,
 		phone:req.body.phone,
-		created_at:today,
-		updated_at:today,
+		//created_at:today,
+		//updated_at:today,
 
 	};	
 	    

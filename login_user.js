@@ -13,7 +13,7 @@ module.exports.login=function(req,res){
 	    email:req.body.email,
     };
     var encrptedPass=cryptr.encrypt(req.body.password);
-    connection.query("select * from users where email= ?;",[user.email,encrptedPass],function(err,results){
+    connection.query("select * from users where email= ?;",[user.email],function(err,results){
     if(err){
     	throw err;
     }
@@ -21,15 +21,15 @@ module.exports.login=function(req,res){
     else{
        if(cryptr.decrypt(results[0].password)==req.body.password){
        var token = jwt.sign(user, process.env.SECRET, { expiresIn: process.env.TOKEN_LIFE}); 
-       connection.query("update users set token=? where email= ?",[token,user.email],function(err,result){
-       if(err){
-           	throw err;
-           }
-        else{
-          	console.log("Token Updated!");
-           }
+       // connection.query("update users set token=? where email= ?",[token,user.email],function(err,result){
+       // if(err){
+       //     	throw err;
+       //     }
+       //  else{
+       //    	console.log("Token Updated!");
+       //     }
 
-       });
+       // });
 
     res.json({
 				status:"Successfull",
