@@ -1,10 +1,13 @@
 
-var mysql = require('mysql');
-var connection_obj = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
- });
+/**
+ * Created by Harshita Gupta 20-07-2018
+ */
+var mysql = require('mysql'),
+connection_obj = mysql.createConnection({
+host: process.env.DB_HOST,
+user: process.env.DB_USER,
+password: process.env.DB_PASS,
+});
 
 var connection=function(){
 

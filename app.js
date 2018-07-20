@@ -1,5 +1,5 @@
 /**
- * Module dependencies.
+ * Created by Harshita Gupta 20-07-2018
  */
  require("dotenv").config();
  var express=require("express"),
@@ -9,7 +9,6 @@
  login_user=require("./login_user"),
  jwt=require("jsonwebtoken"),
  secured_api=require("./secured_api"),
- //router = express.Router(),
  app=express();
 
 
@@ -20,12 +19,12 @@ app.use(body_parser.urlencoded({ extended: true }));
 app.use(body_parser.json());
 
 
-app.get('/', (request, response) => {
-  response.send('Hello from Express!')
+app.get("/", (request, response) => {
+  response.send("Hello from Express!")
 })
 
 
-app.post('/api/register',register_user.register);
+app.post("/api/register",register_user.register);
 
 app.listen(process.env.PORT, (err) => {
   if (err) {
@@ -33,9 +32,8 @@ app.listen(process.env.PORT, (err) => {
   }
   console.log(`server is listening on ${process.env.PORT}`)
 });
-//router.use(verify_token.verifytoken());
-app.post('/api/login',login_user.login);
-app.post('/api/securedapi',verify_token.verifytoken,secured_api.fun);
+app.post("/api/login",login_user.login);
+app.post("/api/securedapi",verify_token.verifytoken,secured_api.fun);
 
 
 

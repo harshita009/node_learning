@@ -1,3 +1,6 @@
+/**
+ * Created by Harshita Gupta 20-07-2018
+ */
 var connection=require("./db_connection").connection_obj,
 Cryptr=require("cryptr"),
 jwt=require("jsonwebtoken");
@@ -11,20 +14,23 @@ module.exports.login=function(req,res){
     };
     var encrptedPass=cryptr.encrypt(req.body.password);
     connection.query("select * from users where email= ?;",[user.email,encrptedPass],function(err,results){
-    if(err)
-    {
-    	console.log("error")
+    if(err){
     	throw err;
     }
+    
     else{
-    console.log(results); 
-    console.log(results[0].name);
-    console.log(results[0].phone);
-    // console.log(results[0].password);
-    if(cryptr.decrypt(results[0].password)==req.body.password)
-    {
-    console.log("Password matched!")
-    var token = jwt.sign(user, process.env.SECRET, { expiresIn: process.env.TOKEN_LIFE}) 
+       if(cryptr.decrypt(results[0].password)==req.body.password){
+       var token = jwt.sign(user, process.env.SECRET, { expiresIn: process.env.TOKEN_LIFE}); 
+       connection.query("update users set token=? where email= ?",[token,user.email],function(err,result){
+       if(err){
+           	throw err;
+           }
+        else{
+          	console.log("Token Updated!");
+           }
+
+       });
+
     res.json({
 				status:"Successfull",
 				message:"User Logged In Successfully!",
@@ -35,11 +41,11 @@ module.exports.login=function(req,res){
 
      }
       else{
-   	res.json({
-				status:"Successfull",
-				message:"Wrong Password!",
+   	     res.json({
+	 		     	status:"Successfull",
+				    message:"Wrong Password!",
 				
-			});
+			     });
 
 
    }
