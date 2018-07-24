@@ -3,58 +3,86 @@
  */
 var connection=require("./db_connection").connection_obj,
 Cryptr=require("cryptr"),
-jwt=require("jsonwebtoken");
+jwt=require("jsonwebtoken"),
+constants=require("./constants"),
+async=require("async"),
+boom=require("boom");
+
 
 cryptr = new Cryptr(process.env.SECRET);
-
 module.exports.login=function(req,res){
-	var today=new Date;
-	var user= {
-	    email:req.body.email,
-    };
-    var encrptedPass=cryptr.encrypt(req.body.password);
-    connection.query("select * from users where email= ?;",[user.email],function(err,results){
-    if(err){
-    	throw err;
-    }
+var user= {
+             email:req.body.email,
+          };
+
+	async.waterfall([function(cb){     
+  connection.query("select * from users where email= ?;",[user.email],function(err,results){
+  if(err){
+      
+            cb(err);
+      
+         }
     
-    else{
-       if(cryptr.decrypt(results[0].password)==req.body.password){
-       var token = jwt.sign(user, process.env.SECRET, { expiresIn: process.env.TOKEN_LIFE}); 
-       // connection.query("update users set token=? where email= ?",[token,user.email],function(err,result){
-       // if(err){
-       //     	throw err;
-       //     }
-       //  else{
-       //    	console.log("Token Updated!");
-       //     }
+  else{
+       if(results.length==0){
+      
+        cb(boom.notFound('user not found!'));//res.json uses content-type:application/json
+       
+          }
+       else{
+        return cb(null,results);
+        }
+      
+    }
+   });
 
-       // });
 
-    res.json({
-				status:"Successfull",
-				message:"User Logged In Successfully!",
-				data:results,
-				token:token,
+},
 
-			});
+
+function(results,cb){
+    if(cryptr.decrypt(results[0].password)==req.body.password){   
+      
+      return cb(null);
+         
 
      }
       else{
-   	     res.json({
-	 		     	status:"Successfull",
-				    message:"Wrong Password!",
-				
-			     });
+         
+        return cb(boom.unauthorized('invalid password'));
 
 
    }
-   }
-  
 
+},
+
+
+function(cb){
+  var token = jwt.sign(user, process.env.SECRET, { expiresIn: process.env.TOKEN_LIFE}); 
+  return cb(null,token);
+
+
+
+}],cb);
+
+
+
+
+function cb(err,result){
+  if(err){
+    
+     res.json(err);
+  }
+  else{
+   res.json({
+          status:constants.SUCCESS.status,
+          message:constants.SUCCESS.msg,
+          token:result
 
     });
+  }
 
+}
 
 
 

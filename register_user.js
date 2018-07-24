@@ -6,9 +6,10 @@ var Cryptr=require("cryptr"),
 express=require("express"),
 connection=require("./db_connection").connection_obj,
 app=express(),
-cryptr = new Cryptr(process.env.SECRET);
+cryptr = new Cryptr(process.env.SECRET)
+constants=require("./constants.js");
 module.exports.register=function(req,res){
-	//var today=new Date;
+	console.log("reg",req.body);
 	var encrptedPass=cryptr.encrypt(req.body.password);
 	console.log(req.body.phone);
 	var user={
@@ -16,22 +17,23 @@ module.exports.register=function(req,res){
 		password:encrptedPass,
 		email:req.body.email,
 		phone:req.body.phone,
-		//created_at:today,
-		//updated_at:today,
+	
 
 	};	
 	    
       	connection.query('INSERT INTO users SET ?;',user,function(err,results){
-		if(err)
-			res.json({
-             status:"Failed",
-             message:"An Error Occured",
-             data:err
-			});
+		if(err){
+
+			const error = boom.badRequest('SQL Error!');
+    		error.output.payload.details = err; 
+			res.json(error);
+
+			
+		}
 		else
 			res.json({
-				status:"Successfull",
-				message:"User Regisered Successfully!",
+				status:constants.SUCCESS.status,
+				message:constants.SUCCESS.msg,
 				data:results,
 
 			});
@@ -39,4 +41,6 @@ module.exports.register=function(req,res){
 	});
 
       }
+
+
 	
