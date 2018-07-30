@@ -6,7 +6,11 @@ var Cryptr=require("cryptr"),
 express=require("express"),
 connection=require("./db_connection").connection_obj,
 app=express(),
-cryptr = new Cryptr(process.env.SECRET)
+SendOtp = require('sendotp'),
+randomize=require('randomatic'),
+sendOtp = new SendOtp('228979AfBsDtmzi5b5f16ab'),
+cryptr = new Cryptr(process.env.SECRET),
+boom=require("boom"),
 constants=require("./constants.js");
 module.exports.register=function(req,res){
 	console.log("reg",req.body);
@@ -30,14 +34,28 @@ module.exports.register=function(req,res){
 
 			
 		}
-		else
+		else{
+			var otp=randomize('0000');
+			sendOtp.setOtpExpiry('10');
+			sendOtp.send(user.phone,"Verification",otp, function (error, data) {
+				if(err)
+					throw err;
+				else{
+					
+					connection.query('update users SET otp=? where email=?;',[otp,user.email],function(err,results){
+                      if(err)
+                      	throw err;
+                      else
+                      	console.log("otp updated");
+                     
+				});
 			res.json({
 				status:constants.SUCCESS.status,
 				message:constants.SUCCESS.msg,
 				data:results,
 
 			});
-			
+			}
 	});
 
       }

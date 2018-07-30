@@ -21,6 +21,8 @@
     "jsonwebtoken": "^8.3.0",
     "mysql": "^2.15.0",
     "node-gyp": "^3.7.0",
+    "randomatic": "^3.0.0",
+    "sendotp": "^1.2.9",
     "swagger-node-express": "^2.1.3"
   }
 }
