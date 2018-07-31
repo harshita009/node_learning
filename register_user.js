@@ -49,8 +49,8 @@ module.exports.generate_otp=function(req,res){
     In async.auto the result is the argument passed with the callback function.
     And every function passes the result till that function to the next function.
     Important point to note is that if a function is dependent on some other function
-    the order in which the parameters are passed is opposite to what it is in normal case.
-    i.e. The first argument is the result and the second one is the error.
+    the order in which the parameters are received is opposite to what it is in normal case.
+    i.e. The first argument is the result and the second one is the callback.
     */
     async.auto({ 
 
