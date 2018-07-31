@@ -4,7 +4,7 @@ exports.SUCCESS={
 
 }
 exports.QUERY_SUCCESS={
-	msg:"Query Executed Successfull!",
+	msg:"Query Executed Successfully!",
 	status:200
 
 }

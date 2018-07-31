@@ -27,8 +27,20 @@ module.exports.generate_otp=function(req,res){
       	one : function(cb){
       		connection.query('INSERT INTO users SET ?;',user,function(err,results)
       		{
-				if(err)
-         			cb(err);
+				if(err){
+					
+				    if(err.code=="ER_DUP_ENTRY"){
+				    	connection.query('select otp_verified from users where email=?;',user.email,function(err,result){
+				    		if(result[0].otp_verified==0){
+                                cb(null,constants.QUERY_SUCCESS.msg);
+				    		}
+				    		else{
+                                cb(err);
+				    		}
+				    	});
+				    }
+				}
+         			
          		else
          			cb(null,constants.QUERY_SUCCESS.msg);
 		
@@ -39,16 +51,10 @@ module.exports.generate_otp=function(req,res){
 		two:["one",function(arg,cb){
 
 			var otp=randomize('0000');
-			sendOtp.send(user.phone,"Verification",otp, function (err) {
-				if(err){
-					sendOtp.retry(user.phone, false, function (err, data) {
-					if(err)
-					  cb(err);
-					else
-         			  cb(null,otp);
-                   });
-					
-				}
+			sendOtp.setOtpExpiry('5');
+			sendOtp.send(user.phone,"Verification",otp, function (err) {//Retry Sending otp -To Be Done 
+				if(err)
+					cb(err);
 				else
          			cb(null,otp);
 				
@@ -70,7 +76,7 @@ module.exports.generate_otp=function(req,res){
            res.json({
 			status:constants.FALIURE.status,
 			message:constants.FALIURE.msg,
-			data:err
+			data:err,
 		   });
            
            }
@@ -78,13 +84,11 @@ module.exports.generate_otp=function(req,res){
            res.json({
 			status:constants.SUCCESS.status,
 			message:constants.SUCCESS.msg,
-			data:result
+			data:result,
 		});
        }
 
-
-
-                    });
+      });
       }
 				
 
@@ -95,52 +99,39 @@ module.exports.generate_otp=function(req,res){
 module.exports.verify_otp=function(req,res){
 
 	var user={
+		email:req.body.email,
 		phone:req.body.phone,
 	    otp:req.body.otp,
-	    email:req.body.email,
-
-    	};	
-    	console.log(user);
-	    
-      	connection.query('update users set otp_verified=1 where email=? and otp=?',[user.email,user.otp],function(err,results){
-		if(err){
-
-			const error = boom.badRequest('SQL Error!');
-    		error.output.payload.details = err; 
-			res.json(error);
-
-			
-		}
-		else{
-		    if(results.changedRows==1){
-		    	res.json({
-				        status:constants.SUCCESS.status,
-				        message:constants.SUCCESS.msg,
-				        });
-
-		    }	
-		    else if(results.changedRows==1 && results.changedRows==0 ){
-		    	res.json({
-				        status:constants.SUCCESS.status,
-				        message:"user already verified!",
-				        });
+	    	};	
+    	
+    	sendOtp.verify(user.phone,user.otp, function (err, data) {
+ 		
+ 		if(data.type == 'success') 
+ 		{
+ 			
+ 			connection.query('update users SET otp_verified=1 where email=?;',[user.email],function(err,results){
+            if(err){
+            	throw(err);
+            }
+            else{
+         			   res.json({
+			              status:constants.SUCCESS.status,
+			              message:constants.SUCCESS.msg,
+			              });
+                                              
+                 }
+            });
 
 
-		    }
-		    else{
-		    	res.json({
-				        status:constants.SUCCESS.status,
-				        message:"Incomplete Details!",
-				        });
-
-
-		    }
-
+ 	    }
+  		if(data.type == 'error'){
+  			
+  			res.json({
+			status:constants.FALIURE.status,
+			message:constants.FALIURE.msg,
+		
+		   });
 		   }
-
-	  });
-      }
-
-
-
+		});
+		}
 
