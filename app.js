@@ -1,7 +1,6 @@
 /**
  * Created by Harshita Gupta 20-07-2018
  */
- require("dotenv").config();
  var express=require("express"),
  body_parser=require("body-parser"),
  register_user=require("./register_user")
