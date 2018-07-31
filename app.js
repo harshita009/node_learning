@@ -23,7 +23,8 @@ app.get("/", (req, res) => {
 })
 
 
-app.post("/api/register",register_user.register);
+app.post("/api/generate_otp",register_user.generate_otp);
+app.post("/api/verify_otp",register_user.verify_otp);
 
 app.listen(process.env.PORT, (err) => {
   if (err) {
