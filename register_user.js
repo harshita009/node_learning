@@ -6,6 +6,7 @@ var Cryptr=require("cryptr"),
 express=require("express"),
 connection=require("./db_connection").connection_obj,
 app=express(),
+async = require('async'),
 SendOtp = require('sendotp'),
 randomize=require('randomatic'),
 sendOtp = new SendOtp('228979AfBsDtmzi5b5f16ab'),
@@ -22,37 +23,70 @@ module.exports.generate_otp=function(req,res){
 		phone:req.body.phone,
 	};	
 	    
-      	connection.query('INSERT INTO users SET ?;',user,function(err,results){
-		if(err){
-
-			const error = boom.badRequest('SQL Error!');
-    		error.output.payload.details = err; 
-			res.json(error);
-
-			
-		}
-		else{
-			var otp=randomize('0000');
-			sendOtp.setOtpExpiry('10');
-			sendOtp.send(user.phone,"Verification",otp, function (error, data) {
+      	async.auto({ 
+      	one : function(cb){
+      		connection.query('INSERT INTO users SET ?;',user,function(err,results)
+      		{
 				if(err)
-					throw err;
-				else{
+         			cb(err);
+         		else
+         			cb(null,constants.QUERY_SUCCESS.msg);
+		
+        		
+
+			})
+      	},
+		two:["one",function(arg,cb){
+
+			var otp=randomize('0000');
+			sendOtp.send(user.phone,"Verification",otp, function (err) {
+				if(err){
+					sendOtp.retry(user.phone, false, function (err, data) {
+					if(err)
+					  cb(err);
+					else
+         			  cb(null,otp);
+                   });
 					
-					connection.query('update users SET otp=? where email=?;',[otp,user.email],function(err,results){
+				}
+				else
+         			cb(null,otp);
+				
+				})
+		}],
+		three:["one","two",function(arg,cb){
+					console.log(arg);
+					connection.query('update users SET otp=? where email=?;',[arg.two,user.email],function(err,results){
                       if(err)
-                      	throw err;
-                      else{
-                      	console.log("otp updated");
-                        res.json({
-				        status:constants.SUCCESS.status,
-				        message:constants.SUCCESS.msg,
-				        data:results,});
-                    }});
-				}});
-		}
-	});
+                      	cb(err);
+                      else
+         			    cb(null,constants.QUERY_SUCCESS.msg);
+                                              
+                    })}]
+				}
+                    
+        ,function(err,result){
+         if(err){
+           res.json({
+			status:constants.FALIURE.status,
+			message:constants.FALIURE.msg,
+			data:err
+		   });
+           
+           }
+           else{
+           res.json({
+			status:constants.SUCCESS.status,
+			message:constants.SUCCESS.msg,
+			data:result
+		});
+       }
+
+
+
+                    });
       }
+				
 
 
 			
